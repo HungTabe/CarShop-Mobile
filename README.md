@@ -3,6 +3,17 @@
 ## Project Overview
 The CarShop Mobile Application is a cross-platform mobile app built with React Native, designed to provide a seamless car purchasing experience. It integrates with a Next.js-based RESTful API powered by Supabase and Stripe, enabling users to browse car products, manage their shopping cart, process payments, communicate with store representatives, and locate physical stores. The app is user-friendly, secure, and optimized for both Android and iOS platforms.
 
+1) Product Screen
+<img width="946" height="2047" alt="image" src="https://github.com/user-attachments/assets/9f3f88c5-ad2a-4b3c-a154-15ac21e7df12" />
+
+2) Product Detail Screen
+<img width="946" height="2047" alt="image" src="https://github.com/user-attachments/assets/2e7a1dfa-e18e-445f-bbac-04e32495f015" />
+
+3) API BackEnd
+<img width="946" height="2047" alt="image" src="https://github.com/user-attachments/assets/fd1cae57-7f25-43ee-8795-eb0af9fcfe2c" />
+
+
+
 ### Features
 - **Authentication**: Secure user signup and login with email and password, managed by Supabase Auth.
 - **Product Browsing**: View a list of cars with sorting and filtering options by price, brand, or other attributes.
