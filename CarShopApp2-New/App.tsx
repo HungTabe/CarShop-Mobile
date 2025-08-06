@@ -1,33 +1,38 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { Provider as StoreProvider } from 'react-redux';
 import Toast from 'react-native-toast-message';
-import { ProductsScreen } from './src/screens/ProductsScreen';
-import { ProductDetailScreen } from './src/screens/ProductDetailScreen';
-import { Product } from './src/types';
+import { store } from './src/store';
+import { lightTheme } from './src/theme';
+import { AuthNavigator } from './src/navigation/AuthNavigator';
+import { MainNavigator } from './src/navigation/MainNavigator';
+import { AuthProvider } from './src/components/AuthProvider';
+import { useAuth } from './src/hooks/useAuth';
 
-export type RootStackParamList = {
-  Products: undefined;
-  ProductDetail: { product: Product };
-};
+// Root component that handles authentication state
+const AppContent: React.FC = () => {
+  const { isAuthenticated } = useAuth();
 
-const Stack = createStackNavigator<RootStackParamList>();
-
-export default function App() {
   return (
     <NavigationContainer>
       <StatusBar style="auto" />
-      <Stack.Navigator
-        initialRouteName="Products"
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="Products" component={ProductsScreen} />
-        <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-      </Stack.Navigator>
+      {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
       <Toast />
     </NavigationContainer>
+  );
+};
+
+// Main App component with providers
+export default function App() {
+  return (
+    <StoreProvider store={store}>
+      <PaperProvider theme={lightTheme}>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </PaperProvider>
+    </StoreProvider>
   );
 } 
