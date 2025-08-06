@@ -10,6 +10,7 @@ import {
   StatusBar,
   TouchableOpacity,
 } from 'react-native';
+import { Appbar, useTheme } from 'react-native-paper';
 import { ProductCard } from '../components/ProductCard';
 import { ErrorLogViewer } from '../components/ErrorLogViewer';
 import { Product } from '../types';
@@ -21,6 +22,7 @@ interface ProductsScreenProps {
 }
 
 export const ProductsScreen: React.FC<ProductsScreenProps> = ({ navigation }) => {
+  const theme = useTheme();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,15 +64,7 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({ navigation }) =>
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <View style={styles.headerTop}>
-        <Text style={styles.title}>CarShop</Text>
-        <TouchableOpacity 
-          style={styles.errorLogButton}
-          onPress={() => setShowErrorLog(true)}
-        >
-          <Text style={styles.errorLogButtonText}>🔍</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.title}>CarShop</Text>
       <Text style={styles.subtitle}>Discover your perfect car</Text>
     </View>
   );
@@ -92,6 +86,11 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({ navigation }) =>
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
+      <Appbar.Header style={[styles.appbar, { backgroundColor: theme.colors.primary }]}>
+        <Appbar.Content title="CarShop" titleStyle={{ color: theme.colors.onPrimary }} />
+        <Appbar.Action icon="account" onPress={() => navigation.navigate('Profile')} />
+        <Appbar.Action icon="magnify" onPress={() => setShowErrorLog(true)} />
+      </Appbar.Header>
       <FlatList
         data={products}
         renderItem={renderProduct}
@@ -150,11 +149,8 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontWeight: '500',
   },
-  errorLogButton: {
-    padding: 8,
-  },
-  errorLogButtonText: {
-    fontSize: 24,
+  appbar: {
+    elevation: 4,
   },
   listContainer: {
     paddingHorizontal: 16,
