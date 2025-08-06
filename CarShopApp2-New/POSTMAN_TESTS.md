@@ -6,6 +6,7 @@ This document provides a complete Postman test collection for the CarShop Backen
 
 **Collection Name**: CarShop Backend API Tests  
 **Base URL**: `http://localhost:3000`  
+**Deploy URL**: `https://car-shop-backend-pxlk.vercel.app`
 **Environment**: Development  
 
 ## 🔧 Environment Variables

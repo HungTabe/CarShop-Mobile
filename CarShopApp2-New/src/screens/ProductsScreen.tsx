@@ -1,20 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  FlatList,
-  RefreshControl,
-  ActivityIndicator,
   SafeAreaView,
   StatusBar,
-  TouchableOpacity,
 } from 'react-native';
-import { Appbar, useTheme } from 'react-native-paper';
-import { ProductCard } from '../components/ProductCard';
+import { Appbar, useTheme, FAB } from 'react-native-paper';
+import { FilterModal } from '../components/FilterModal';
+import { FilterChips } from '../components/FilterChips';
+import { ProductGrid } from '../components/ProductGrid';
 import { ErrorLogViewer } from '../components/ErrorLogViewer';
-import { Product } from '../types';
-import { getProducts } from '../services/api';
+import { useProducts } from '../hooks/useProducts';
+import { FilterOptions } from '../types';
 import { errorHandler } from '../utils/errorHandler';
 
 interface ProductsScreenProps {
@@ -23,37 +20,22 @@ interface ProductsScreenProps {
 
 export const ProductsScreen: React.FC<ProductsScreenProps> = ({ navigation }) => {
   const theme = useTheme();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [showErrorLog, setShowErrorLog] = useState(false);
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  const {
+    products,
+    loading,
+    refreshing,
+    filters,
+    availableBrands,
+    availableModels,
+    refreshProducts,
+    updateFilters,
+    clearFilters,
+  } = useProducts();
 
-  const loadProducts = async () => {
-    try {
-      setLoading(true);
-      const productsData = await getProducts();
-      setProducts(productsData);
-      errorHandler.logSuccess('Sản phẩm đã được tải thành công', 'Products Screen');
-    } catch (error) {
-      errorHandler.logError(error as Error, 'Products Screen');
-      // Fallback to empty array if API fails
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadProducts();
-    setRefreshing(false);
-  };
-
-  const handleProductPress = (product: Product) => {
+  const handleProductPress = (product: any) => {
     try {
       navigation.navigate('ProductDetail', { product });
       errorHandler.logSuccess(`Đã mở chi tiết ${product.name}`, 'Products Screen');
@@ -62,51 +44,96 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({ navigation }) =>
     }
   };
 
+  const handleFilterApply = (newFilters: FilterOptions) => {
+    updateFilters(newFilters);
+  };
+
+  const handleRemoveFilter = (key: keyof FilterOptions) => {
+    const newFilters = { ...filters };
+    delete newFilters[key];
+    updateFilters(newFilters);
+  };
+
+  const handleClearAllFilters = () => {
+    clearFilters();
+  };
+
   const renderHeader = () => (
     <View style={styles.header}>
-      <Text style={styles.title}>CarShop</Text>
-      <Text style={styles.subtitle}>Discover your perfect car</Text>
+      <View style={styles.headerTop}>
+        <View>
+          <Appbar.Content 
+            title="CarShop" 
+            titleStyle={{ color: theme.colors.onPrimary, fontSize: 24, fontWeight: 'bold' }}
+          />
+          <Appbar.Content 
+            title="Discover your perfect car" 
+            titleStyle={{ color: theme.colors.onPrimary, fontSize: 14, opacity: 0.8 }}
+          />
+        </View>
+        <View style={styles.headerActions}>
+          <Appbar.Action 
+            icon="account" 
+            onPress={() => navigation.navigate('Profile')}
+            iconColor={theme.colors.onPrimary}
+          />
+          <Appbar.Action 
+            icon="magnify" 
+            onPress={() => setShowErrorLog(true)}
+            iconColor={theme.colors.onPrimary}
+          />
+        </View>
+      </View>
     </View>
   );
 
-  const renderProduct = ({ item }: { item: Product }) => (
-    <ProductCard product={item} onPress={handleProductPress} />
-  );
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
-        <ActivityIndicator size="large" color="#059669" />
-        <Text style={styles.loadingText}>Loading cars...</Text>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="light-content" backgroundColor={theme.colors.primary} />
+      
+      {/* App Bar */}
       <Appbar.Header style={[styles.appbar, { backgroundColor: theme.colors.primary }]}>
-        <Appbar.Content title="CarShop" titleStyle={{ color: theme.colors.onPrimary }} />
-        <Appbar.Action icon="account" onPress={() => navigation.navigate('Profile')} />
-        <Appbar.Action icon="magnify" onPress={() => setShowErrorLog(true)} />
+        {renderHeader()}
       </Appbar.Header>
-      <FlatList
-        data={products}
-        renderItem={renderProduct}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.listContainer}
-        ListHeaderComponent={renderHeader}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
+
+      {/* Filter Chips */}
+      <FilterChips
+        filters={filters}
+        onRemoveFilter={handleRemoveFilter}
+        onClearAll={handleClearAllFilters}
       />
+
+      {/* Product Grid */}
+      <ProductGrid
+        products={products}
+        loading={loading}
+        refreshing={refreshing}
+        onRefresh={refreshProducts}
+        onProductPress={handleProductPress}
+      />
+
+      {/* Filter Modal */}
+      <FilterModal
+        visible={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        onApply={handleFilterApply}
+        currentFilters={filters}
+        availableBrands={availableBrands}
+        availableModels={availableModels}
+      />
+
+      {/* Error Log Viewer */}
       <ErrorLogViewer 
         visible={showErrorLog} 
         onClose={() => setShowErrorLog(false)} 
+      />
+
+      {/* FAB for Filter */}
+      <FAB
+        icon="filter-variant"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        onPress={() => setShowFilterModal(true)}
+        color={theme.colors.onPrimary}
       />
     </SafeAreaView>
   );
@@ -115,48 +142,26 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({ navigation }) =>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 24,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#1F2937',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '500',
   },
   appbar: {
     elevation: 4,
   },
-  listContainer: {
+  header: {
+    flex: 1,
     paddingHorizontal: 16,
-    paddingBottom: 24,
   },
-  row: {
+  headerTop: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  headerActions: {
+    flexDirection: 'row',
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
 }); 
